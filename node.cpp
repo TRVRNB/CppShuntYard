@@ -23,7 +23,7 @@ Node::~Node(){
 
 Node* Node::get_child(unsigned short child_index){
   // get the child requested in argument
-  return children[child_index]; // 1 or 2
+  return children[child_index]; // 0 or 1 or 2
 }
 
 string Node::get_child_data(unsigned short child_index){
@@ -34,7 +34,7 @@ string Node::get_child_data(unsigned short child_index){
   return children[child_index]->get_data();
 }
 
-bool have_grandkids(){
+bool Node::have_grandkids(){
   // whether or not any children have children
   for (Node* child : children){
     // look at all 3 children, check all 3 of their children
