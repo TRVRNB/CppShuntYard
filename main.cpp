@@ -11,7 +11,8 @@ namespace shunting_yard{
   Node* headptr = nullptr; // end of the stack
   Node* prevptr = nullptr; // second to last, just saves some run time
   // need to keep track of these separately, since it's theoretically much faster this way
-  string version = "1.1";
+  string mode = "postfix";
+  string version = "1.2";
 }
 using namespace shunting_yard;
 
@@ -26,6 +27,27 @@ void push(Node* nextptr){
   prevptr = headptr;
   headptr = nextptr;
   return;
+}
+
+float operation(string s1, string s2, string operation){
+  // take 2 numbers and an operator, perform the operation, automatically casts
+  // ORDER MATTERS!
+  // also, these are OPERATIONS, not FUNCTIONS, so they need 2 constants instead of 1
+  float f1 = stof(s1); // input is integer numbers, but i think computations can be floats
+  float f2 = stof(s2);
+  if (operation == "+"){ // ADD
+    return f1 + f2;
+  } else if (operation == "-"){ // SUBTRACT
+    return f1 - f2;
+  } else if (operation == "*"){ // MULTIPLY
+    return f1 * f2;
+  } else if (operation == "/"){ // DIVIDE
+    return f1 / f2;
+  } else if (operation == "^"){ // POWER
+    return pow(f1, f2);
+  }
+  cout << "operation " << operation << " not found" << endl;
+  return 0.0;
 }
 
 Node* pop(){
@@ -53,6 +75,35 @@ Node* pop(){
 }
   
 int main(){
-  cout << "ok!" << endl;
+  cout << "Shunting Yard Calculator - Version " << version << endl;
+  cout << "Type 'HELP' for a list of commands." << endl;
+  string input = "";
+  while (input != "QUIT"){
+    input = "";
+    cout << "$ " << flush;
+    cin >> input;
+    if (input == "HELP"){
+      cout << "HELP: return a list of commands (obviously!)\n";
+      cout << "QUIT: end the program\n";
+      cout << "INFIX: switch to infix mode (a / b)\n";
+      cout << "PREFIX: switch to prefix mode (/ a b)\n";
+      cout << "POSTFIX: switch to postfix mode (b a /)\n";
+      cout << flush;
+    } else if (input == "INFIX"){
+      mode = "infix";
+      cout << "switched to INFIX mode.";
+    } else if (input == "PREFIX"){
+      mode = "prefix";
+      cout << "switched to PREFIX mode.";
+    } else if (input == "POSTFIX"){
+      mode = "postfix";
+      cout << "switched to POSTFIX mode.";
+    }
+
+  }
+
+
+  
+  cout << "Goodbye!" << endl;
   return 0;
 }
