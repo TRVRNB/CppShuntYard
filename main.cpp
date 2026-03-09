@@ -7,12 +7,16 @@ using namespace std;
 // started 3/03/26
 // github.com/TRVRNB/CppShuntYard.git
 namespace shunting_yard{
+  // STACK VARIABLES
   Node* startptr = nullptr;; // bottom of the stack
   Node* headptr = nullptr; // end of the stack
   Node* prevptr = nullptr; // second to last, just saves some run time
   // need to keep track of these separately, since it's theoretically much faster this way
+  // QUEUE VARIABLES
+  Node* queue_back = nullptr;
+  // OTHER VARIABLES
   string mode = "postfix";
-  string version = "1.2";
+  string version = "1.3";
 }
 using namespace shunting_yard;
 
@@ -67,12 +71,44 @@ Node* pop(){
   // but after a certain point, may as well bite the bullet and take a negligible hit to performance, it already has 3 pointers and a lot of functions
   // just know i would do this differently if i thought the stack would ever get to at least a few thousand elements
   prevptr = startptr;
-  while (prevptr->get_child(0)->get_child(0) != nullptr){ // look for second to last
+  while (!prevptr->have_grandkids()){ // look for second to last
     prevptr = prevptr->get_child(0); // get next
     // get_child runs 3 times per loop here, but it shouldn't be a big hit
   }
   return headptr;
 }
+
+void enqueue(Node* to_queue){
+  // add to the back of the queue
+  if (queue_back == nullptr){ // first, check if the queue even has anything yet
+    queue_back = to_queue;
+    return;
+  }
+  to_queue->set_child(0, queue_back); // set next to back of the queue
+  queue_back = to_queue;
+  return;
+}
+
+Node* dequeue(){
+  // remove and return the front of the queue
+  Node* to_return;
+  Node* current_ptr = queue_back;
+  if (current_ptr == nullptr){ // check for empty queue
+    return nullptr;
+  } else if (current_ptr->get_child(0) == nullptr){ // check for only 1
+    to_return = current_ptr->get_child(0);
+    current_ptr->set_child(0, nullptr);
+    return to_return;
+  }
+  while (!current_ptr->have_grandkids()){
+    // go until you find one with only next (no next->next, if that makes sense) 
+    current_ptr = current_ptr->get_child(0);
+  }
+  to_return = current_ptr->get_child(0);
+  current_ptr->set_child(0, nullptr);
+  return to_return;
+}
+
   
 int main(){
   cout << "Shunting Yard Calculator - Version " << version << endl;
@@ -98,7 +134,7 @@ int main(){
     } else if (input == "POSTFIX"){
       mode = "postfix";
       cout << "switched to POSTFIX mode.";
-    }
+    } 
 
   }
 
