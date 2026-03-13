@@ -16,11 +16,26 @@ namespace shunting_yard{
   Node* queue_back = nullptr;
   // OTHER VARIABLES
   string mode = "postfix";
-  string version = "1.3";
+  string version = "1.4"; 
 }
 using namespace shunting_yard;
 
+namespace terminal_colors{
+  // i made this, after wasting quite a bit of time looking into the documentation, but it is mine!
+  // these MIGHT be system-dependent. it's just ASCII, but some terminals might have weird formats, i don't know very much about this
+  // they also might have bad contrast with light mode terminals... but, like, come on
+  const string red = "\033[1;31m";
+  const string green = "\033[1;32m";
+  const string yellow = "\033[1;33m";
+  const string blue = "\033[1;34m";
+  const string white = "\033[1;37m";
+  const string resetl = "\033[0,37m";
+  const string endl2 = "\033[0,37m\n";
+}
+using namespace terminal_colors;
+
 // stack functions
+// the stack is a linked list, but a very simple one, where the only efficient point to access is the very last node added
 void push(Node* nextptr){
   // push to top of stack
   if (startptr == nullptr){
@@ -33,30 +48,10 @@ void push(Node* nextptr){
   return;
 }
 
-float operation(string s1, string s2, string operation){
-  // take 2 numbers and an operator, perform the operation, automatically casts
-  // ORDER MATTERS!
-  // also, these are OPERATIONS, not FUNCTIONS, so they need 2 constants instead of 1
-  float f1 = stof(s1); // input is integer numbers, but i think computations can be floats
-  float f2 = stof(s2);
-  if (operation == "+"){ // ADD
-    return f1 + f2;
-  } else if (operation == "-"){ // SUBTRACT
-    return f1 - f2;
-  } else if (operation == "*"){ // MULTIPLY
-    return f1 * f2;
-  } else if (operation == "/"){ // DIVIDE
-    return f1 / f2;
-  } else if (operation == "^"){ // POWER
-    return pow(f1, f2);
-  }
-  cout << "operation " << operation << " not found" << endl;
-  return 0.0;
-}
-
 Node* pop(){
   // remove and return last
   // doesn't automatically free memory!
+  // this references the idea i mentioned earlier, about whether or not a data structure 'owns' the objects it points to; i don't know the official terminology for this, but the stack needs to return data whenever popped, so it definitely doesn't own this data
   Node* pop_node = headptr;
   if (startptr == nullptr){ // stack is empty!
     return nullptr;
@@ -78,6 +73,9 @@ Node* pop(){
   return headptr;
 }
 
+// queue functions
+// the queue is almost the opposite, where the front and back are saved, and it has FI/FO
+// my implementation is very simple, has the same optimization problems (time < memory) as the stack
 void enqueue(Node* to_queue){
   // add to the back of the queue
   if (queue_back == nullptr){ // first, check if the queue even has anything yet
@@ -109,32 +107,63 @@ Node* dequeue(){
   return to_return;
 }
 
+float operation(string s1, string s2, string operation){
+  // take 2 numbers and an operator, perform the operation, automatically casts
+  // ORDER MATTERS!
+  // also, these are OPERATIONS, not FUNCTIONS, so they need 2 constants instead of 1
+  float f1 = stof(s1); // input is integer numbers, but i think computations can be floats
+  float f2 = stof(s2);
+  if (operation == "+"){ // ADD
+    return f1 + f2;
+  } else if (operation == "-"){ // SUBTRACT
+    return f1 - f2;
+  } else if (operation == "*"){ // MULTIPLY
+    return f1 * f2;
+  } else if (operation == "/"){ // DIVIDE
+    return f1 / f2;
+  } else if (operation == "^"){ // POWER
+    return pow(f1, f2);
+  }
+  cout << "operation " << operation << " not found" << endl;
+  return 0.0;
+}
   
 int main(){
-  cout << "Shunting Yard Calculator - Version " << version << endl;
-  cout << "Type 'HELP' for a list of commands." << endl;
+  cout << red << "TRVRNB's Shunting Yard Calculator - Version " << version << endl2;
+  cout << yellow << "Type 'HELP' for a list of commands." << endl2;
   string input = "";
-  while (input != "QUIT"){
+  while (input != "QUIT"){ // QUIT
     input = "";
-    cout << "$ " << flush;
+    cout << green << "$ " << flush;
     cin >> input;
-    if (input == "HELP"){
-      cout << "HELP: return a list of commands (obviously!)\n";
-      cout << "QUIT: end the program\n";
-      cout << "INFIX: switch to infix mode (a / b)\n";
-      cout << "PREFIX: switch to prefix mode (/ a b)\n";
-      cout << "POSTFIX: switch to postfix mode (b a /)\n";
+    if (input == "HELP"){ // HELP
+      cout << white << "HELP: return a list of commands (obviously!)" << endl2;
+      cout << "QUIT: end the program" << endl2;
+      cout << "INFIX: switch to infix mode (a / b)" << endl2;
+      cout << "PREFIX: switch to prefix mode (/ a b)" << endl2;
+      cout << "POSTFIX: switch to postfix mode (b a /)" << endl2;
+      cout << "RUN: input and calculate an expression" << endl2;
       cout << flush;
-    } else if (input == "INFIX"){
+    } else if (input == "INFIX"){ // INFIX
       mode = "infix";
-      cout << "switched to INFIX mode.";
-    } else if (input == "PREFIX"){
+      cout << yellow << "Switched to INFIX mode." << endl2 << flush;
+    } else if (input == "PREFIX"){ // PREFIX
       mode = "prefix";
-      cout << "switched to PREFIX mode.";
-    } else if (input == "POSTFIX"){
+      cout << yellow << "Switched to PREFIX mode." << endl2 << flush;
+    } else if (input == "POSTFIX"){ // POSTFIX
       mode = "postfix";
-      cout << "switched to POSTFIX mode.";
-    } 
+      cout << yellow << "Switched to POSTFIX mode." << endl2 << flush;
+    } else if (input == "RUN"){ // RUN
+      string expression;
+      cout << endl2;
+      cout << yellow << "Enter an expression." << endl2; 
+      cout << green << "\t$ " << flush;
+      cin >> expression;
+      if (expression == "eeeeeeeeeeeeeeeeeee"){
+	cout << blue << "eeeeeeeeeeeeeeeeee" << endl2 << flush;
+	return 0;
+      }
+    }
 
   }
 
