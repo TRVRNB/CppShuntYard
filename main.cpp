@@ -16,13 +16,13 @@ namespace shunting_yard{
   Node* queue_back = nullptr;
   // OTHER VARIABLES
   string mode = "postfix";
-  string version = "1.4"; 
+  string version = "1.5"; 
 }
 using namespace shunting_yard;
 
 namespace terminal_colors{
   // i made this, after wasting quite a bit of time looking into the documentation, but it is mine!
-  // these MIGHT be system-dependent. it's just ASCII, but some terminals might have weird formats, i don't know very much about this
+  // these MIGHT be system-dependent, but it's just ASCII color codes
   // they also might have bad contrast with light mode terminals... but, like, come on
   const string red = "\033[1;31m";
   const string green = "\033[1;32m";
@@ -124,7 +124,7 @@ float operation(string s1, string s2, string operation){
   } else if (operation == "^"){ // POWER
     return pow(f1, f2);
   }
-  cout << "operation " << operation << " not found" << endl;
+  cout << yellow << "operation " << operation << " not found" << endl2 << flush;
   return 0.0;
 }
   
@@ -154,21 +154,28 @@ int main(){
       mode = "postfix";
       cout << yellow << "Switched to POSTFIX mode." << endl2 << flush;
     } else if (input == "RUN"){ // RUN
-      string expression;
+      char input1[201] = "";
       cout << endl2;
-      cout << yellow << "Enter an expression." << endl2; 
-      cout << green << "\t$ " << flush;
-      cin >> expression;
+      cout << yellow << "Enter an expression. Add a space between terms." << endl2 << green << "\t$ " << flush; 
+      cin.ignore();
+      cin.getline(input1, 200, '\n');
+      string expression(input1);
       if (expression == "eeeeeeeeeeeeeeeeeee"){
-	cout << blue << "eeeeeeeeeeeeeeeeee" << endl2 << flush;
+	cout << blue << "eeeeeeeeeeeeeeeeeee" << endl2 << flush;
 	return 0;
       }
+      // now, parse the expression
+      // (just test it for now)
+      for (char c : expression){
+	cout << white << c << endl;
+      }
+      
     }
 
   }
 
 
   
-  cout << "Goodbye!" << endl;
+    cout << yellow << "Goodbye!" << endl2 << flush;
   return 0;
 }
