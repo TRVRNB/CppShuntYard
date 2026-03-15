@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <string>
+#include <vector>
 #include "node.h"
 using namespace std;
 // shunting-yard algorithm to perform calculations based on user input
@@ -16,7 +17,7 @@ namespace shunting_yard{
   Node* queue_back = nullptr;
   // OTHER VARIABLES
   string mode = "postfix";
-  string version = "1.5"; 
+  string version = "1.6";
 }
 using namespace shunting_yard;
 
@@ -29,8 +30,8 @@ namespace terminal_colors{
   const string yellow = "\033[1;33m";
   const string blue = "\033[1;34m";
   const string white = "\033[1;37m";
-  const string resetl = "\033[0,37m";
-  const string endl2 = "\033[0,37m\n";
+  const string reset1  = "\033[0m";
+  const string endl1  = "\033[0m\n";
 }
 using namespace terminal_colors;
 
@@ -124,51 +125,60 @@ float operation(string s1, string s2, string operation){
   } else if (operation == "^"){ // POWER
     return pow(f1, f2);
   }
-  cout << yellow << "operation " << operation << " not found" << endl2 << flush;
+  cout << yellow << "operation " << operation << " not found" << endl1 << flush;
   return 0.0;
 }
   
 int main(){
-  cout << red << "TRVRNB's Shunting Yard Calculator - Version " << version << endl2;
-  cout << yellow << "Type 'HELP' for a list of commands." << endl2;
+  cout << red << "TRVRNB's Shunting Yard Calculator - Version " << version << endl1;
+  cout << yellow << "Type 'HELP' for a list of commands." << endl1;
   string input = "";
   while (input != "QUIT"){ // QUIT
     input = "";
-    cout << green << "$ " << flush;
+    cout << green << "$ " << reset1 << flush;
     cin >> input;
     if (input == "HELP"){ // HELP
-      cout << white << "HELP: return a list of commands (obviously!)" << endl2;
-      cout << "QUIT: end the program" << endl2;
-      cout << "INFIX: switch to infix mode (a / b)" << endl2;
-      cout << "PREFIX: switch to prefix mode (/ a b)" << endl2;
-      cout << "POSTFIX: switch to postfix mode (b a /)" << endl2;
-      cout << "RUN: input and calculate an expression" << endl2;
+      cout << "HELP: return a list of commands (obviously!)" << endl1;
+      cout << "QUIT: end the program" << endl1;
+      cout << "INFIX: switch to infix mode (a / b)" << endl1;
+      cout << "PREFIX: switch to prefix mode (/ a b)" << endl1;
+      cout << "POSTFIX: switch to postfix mode (b a /)" << endl1;
+      cout << white << "RUN: input and calculate an expression" << endl1;
       cout << flush;
     } else if (input == "INFIX"){ // INFIX
       mode = "infix";
-      cout << yellow << "Switched to INFIX mode." << endl2 << flush;
+      cout << yellow << "Switched to INFIX mode." << endl1 << flush;
     } else if (input == "PREFIX"){ // PREFIX
       mode = "prefix";
-      cout << yellow << "Switched to PREFIX mode." << endl2 << flush;
+      cout << yellow << "Switched to PREFIX mode." << endl1 << flush;
     } else if (input == "POSTFIX"){ // POSTFIX
       mode = "postfix";
-      cout << yellow << "Switched to POSTFIX mode." << endl2 << flush;
+      cout << yellow << "Switched to POSTFIX mode." << endl1 << flush;
     } else if (input == "RUN"){ // RUN
       char input1[201] = "";
-      cout << endl2;
-      cout << yellow << "Enter an expression. Add a space between terms." << endl2 << green << "\t$ " << flush; 
+      cout << endl1;
+      cout << yellow << "Enter an expression. Add a space between terms." << endl1 << green << "\t$ " << reset1 << flush;
       cin.ignore();
       cin.getline(input1, 200, '\n');
-      string expression(input1);
+      string expression(input1); // apparently i can iterate over this like a C-style string
       if (expression == "eeeeeeeeeeeeeeeeeee"){
-	cout << blue << "eeeeeeeeeeeeeeeeeee" << endl2 << flush;
+	cout << blue << "eeeeeeeeeeeeeeeeeee" << endl1 << flush;
 	return 0;
       }
       // now, parse the expression
       // (just test it for now)
-      for (char c : expression){
-	cout << white << c << endl;
+      vector<string> terms;
+      string current_term = "";
+      for (char c : expression){ // look at every char
+        if (c == ' '){ // reset this term
+          terms.push_back(current_term); // add to vector
+          current_term = "";
+        } else {
+          current_term += c;
+        }
       }
+      terms.push_back(current_term); // need to push back the last one, too!
+
       
     }
 
@@ -176,6 +186,6 @@ int main(){
 
 
   
-    cout << yellow << "Goodbye!" << endl2 << flush;
+    cout << yellow << "Goodbye!" << endl1 << flush;
   return 0;
 }
