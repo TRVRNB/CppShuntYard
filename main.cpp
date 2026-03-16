@@ -16,8 +16,8 @@ namespace shunting_yard{
   // QUEUE VARIABLES
   Node* queue_back = nullptr;
   // OTHER VARIABLES
-  string mode = "postfix";
-  string version = "1.6";
+  string mode = "prefix"; // this makes the most sense as a default mode to me
+  string version = "1.7";
 }
 using namespace shunting_yard;
 
@@ -128,10 +128,16 @@ float operation(string s1, string s2, string operation){
   cout << yellow << "operation " << operation << " not found" << endl1 << flush;
   return 0.0;
 }
+
+bool is_operator(string term){
+  // returns whether or not this term is an operator
+  return ((term == "+") || (term == "-") || (term == "*") || (term == "/") || (term == "^"));
+}
   
 int main(){
   cout << red << "TRVRNB's Shunting Yard Calculator - Version " << version << endl1;
   cout << yellow << "Type 'HELP' for a list of commands." << endl1;
+  cout << yellow << "Current mode: " << mode << endl1;
   string input = "";
   while (input != "QUIT"){ // QUIT
     input = "";
@@ -147,17 +153,17 @@ int main(){
       cout << flush;
     } else if (input == "INFIX"){ // INFIX
       mode = "infix";
-      cout << yellow << "Switched to INFIX mode." << endl1 << flush;
+      cout << yellow << "Switched to infix mode." << endl1 << flush;
     } else if (input == "PREFIX"){ // PREFIX
       mode = "prefix";
-      cout << yellow << "Switched to PREFIX mode." << endl1 << flush;
+      cout << yellow << "Switched to prefix mode." << endl1 << flush;
     } else if (input == "POSTFIX"){ // POSTFIX
       mode = "postfix";
-      cout << yellow << "Switched to POSTFIX mode." << endl1 << flush;
+      cout << yellow << "Switched to postfix mode." << endl1 << flush;
     } else if (input == "RUN"){ // RUN
       char input1[201] = "";
       cout << endl1;
-      cout << yellow << "Enter an expression. Add a space between terms." << endl1 << green << "\t$ " << reset1 << flush;
+      cout << yellow << "Enter an expression. Add a space between terms, including parentheses." << endl1 << green << "\t$ " << reset1 << flush;
       cin.ignore();
       cin.getline(input1, 200, '\n');
       string expression(input1); // apparently i can iterate over this like a C-style string
@@ -178,6 +184,36 @@ int main(){
         }
       }
       terms.push_back(current_term); // need to push back the last one, too!
+      // build the expression tree now
+      Node* root = nullptr; // root of expression tree
+      // infix will be infinitely more complicated; for prefix and postfix, the operations essentially become their own functions, so i don't need to keep order of operations or parentheses in mind
+      // but for infix, it's awkward, since you have to make the program infer the order instead
+      // if i input "+ * 2 3 4, that just wraps to the infix equivalent of 2 * 3 + 2, which is less human readable but more computer readable
+      if (mode == "prefix"){ // operators go before numbers
+        for (int i = terms.size(); i > 0; i--){ // iterate over terms in reverse
+          string term = terms[i-1];
+          Node* new_node = new Node(term);
+          if (is_operator(term)){ // the operators go at the start but are iterated over at the end
+            // get two terms from stack, add them as children
+            Node* child1 = pop();
+            Node* child2 = pop();
+            new_node->set_child(1, child1); // children[1] is left child
+            new_node->set_child(2, child2);
+          }
+          push(new_node);
+        root = pop(); // end of expression tree will be root
+
+
+
+        }
+      } else if (mode == "postfix"){
+        return 0;
+
+
+      } else if (mode == "infix"){
+        return 0;
+
+      }
 
       
     }

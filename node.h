@@ -13,7 +13,7 @@ class Node{
   // and it would be more inconvenient to make :)
  public:
   // constructor / destructor
-  Node(Node* n_next, Node* n_child1, Node* n_child2, string n_meta, string n_data);
+  Node(string n_data);
   ~Node();
   // main functions!
   // children[0] is next, children[0] and children[1] are left/right child
@@ -23,7 +23,6 @@ class Node{
   string get_data();
   void set_data(string n_data);
   bool have_grandkids();
-  string meta; // metadata, aka comments, for debugging purposes
  private:
   Node* children[2] = {nullptr}; // create 2 empty pointers to nodes (filled in later)
   string data;

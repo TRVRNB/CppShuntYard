@@ -3,12 +3,8 @@
 #include "node.h"
 using namespace std;
 
-Node::Node(Node* n_next, Node* n_child1, Node* n_child2, string n_meta, string n_data){
+Node::Node(string n_data){
   // constructor, mainly for setting private data
-  children[0] = n_next;
-  children[1] = n_child1;
-  children[2] = n_child2;
-  meta = n_meta;
   data = n_data;
 }
 
