@@ -16,16 +16,12 @@ class Node{
   Node(string n_data);
   ~Node();
   // main functions!
-  // children[0] is next, children[0] and children[1] are left/right child
-  Node* get_child(unsigned short child_index); // 1 = child1, 2 = child2, this way i can use variables
-  string get_child_data(unsigned short child_index); // same as above; this might save some lines
-  void set_child(unsigned short child_index, Node* n_child);
-  string get_data();
-  void set_data(string n_data);
-  bool have_grandkids();
- private:
-  Node* children[2] = {nullptr}; // create 2 empty pointers to nodes (filled in later)
   string data;
+  void set_child(int child, Node* new_node);
+  Node* get_child(int child);
+
+ private:
+  Node* children[3] = {nullptr}; // create 3 empty pointers to nodes (filled in later)
 };
 
 

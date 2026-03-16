@@ -15,9 +15,10 @@ namespace shunting_yard{
   // need to keep track of these separately, since it's theoretically much faster this way
   // QUEUE VARIABLES
   Node* queue_back = nullptr;
+  Node* queue_front = nullptr;
   // OTHER VARIABLES
-  string mode = "prefix"; // this makes the most sense as a default mode to me
-  string version = "1.8";
+  string mode = "postfix";
+  string version = "1.9";
 }
 using namespace shunting_yard;
 
@@ -38,15 +39,17 @@ using namespace terminal_colors;
 // stack functions
 // the stack is a linked list, but a very simple one, where the only efficient point to access is the very last node added
 void push(Node* nextptr){
+  nextptr->set_child(0, nullptr); // this should start without a next pointer
   // push to top of stack
   if (startptr == nullptr){
     startptr = nextptr;
+    headptr = nextptr;
+    prevptr = nullptr;
   } else {
     headptr->set_child(0, nextptr); // set next
+    prevptr = headptr;
+    headptr = nextptr;
   }
-  prevptr = headptr;
-  headptr = nextptr;
-  return;
 }
 
 Node* pop(){
@@ -59,6 +62,8 @@ Node* pop(){
   } else if (prevptr == nullptr){ // stack is size 1
     headptr = nullptr;
     startptr = nullptr;
+    prevptr = nullptr;
+    pop_node->set_child(0, nullptr);
     return pop_node;
   }
   prevptr->set_child(0, nullptr); // remove next
@@ -66,13 +71,16 @@ Node* pop(){
   // i could technically avoid this O(n) computation by storing the previous pointer in the Node class
   // but after a certain point, may as well bite the bullet and take a negligible hit to performance, it already has 3 pointers and a lot of functions
   // just know i would do this differently if i thought the stack would ever get to at least a few thousand elements
-  prevptr = nullptr; // had to change this since it fails when there is 1 node
+  headptr = prevptr;
   Node* current_node = startptr;
+  Node* lastprev = nullptr;
   while ((current_node != nullptr) && (current_node->get_child(0) != headptr)){
+    lastprev = current_node;
     current_node = current_node->get_child(0); // get next
   }
-  prevptr = current_node;
-  return headptr;
+  prevptr = lastprev;
+  pop_node->set_child(0, nullptr);
+  return pop_node;
 }
 
 // queue functions
@@ -80,33 +88,29 @@ Node* pop(){
 // my implementation is very simple, has the same optimization problems (time < memory) as the stack
 void enqueue(Node* to_queue){
   // add to the back of the queue
-  if (queue_back == nullptr){ // first, check if the queue even has anything yet
+  to_queue->set_child(0, nullptr);
+  if (queue_back == nullptr){
+    queue_front = to_queue;
     queue_back = to_queue;
     return;
   }
-  to_queue->set_child(0, queue_back); // set next to back of the queue
+  // assume the queue isn't empty now
+  queue_back->set_child(0, to_queue);
   queue_back = to_queue;
-  return;
 }
 
 Node* dequeue(){
   // remove and return the front of the queue
-  Node* to_return;
-  Node* current_ptr = queue_back;
-  if (current_ptr == nullptr){ // check for empty queue
+  if (queue_front == nullptr){ // empty queue
     return nullptr;
-  } else if (current_ptr->get_child(0) == nullptr){ // check for only 1
-    to_return = current_ptr->get_child(0);
-    current_ptr->set_child(0, nullptr);
-    return to_return;
   }
-  while (!current_ptr->have_grandkids()){
-    // go until you find one with only next (no next->next, if that makes sense) 
-    current_ptr = current_ptr->get_child(0);
+  Node* pop_node = queue_front;
+  queue_front = queue_front->get_child(0);
+  if (queue_front == nullptr){
+    queue_back = nullptr;
   }
-  to_return = current_ptr->get_child(0);
-  current_ptr->set_child(0, nullptr);
-  return to_return;
+  pop_node->set_child(0, nullptr);
+  return pop_node;
 }
 
 float operation(string s1, string s2, string operation){
@@ -145,7 +149,21 @@ int o3(string term){
   } else {
     return 1;
   }
+}
 
+void print_tree(Node* current_node, unsigned short recursion = 0){
+  // print the expression and its children
+  // recursion determines tab length
+  if (current_node == nullptr){
+    return;
+  }
+  for (int i = 0; i < recursion; i++){
+    cout << ' ';
+  }
+  cout << reset1 << current_node->data << endl;
+  print_tree(current_node->get_child(1), recursion+1);
+  print_tree(current_node->get_child(2), recursion+1);
+  return;
 }
 
 int main(){
@@ -191,13 +209,17 @@ int main(){
       string current_term = "";
       for (char c : expression){ // look at every char
         if (c == ' '){ // reset this term
-          terms.push_back(current_term); // add to vector
+          if (current_term != ""){
+            terms.push_back(current_term); // add to vector
+          }
           current_term = "";
         } else {
           current_term += c;
         }
       }
-      terms.push_back(current_term); // need to push back the last one, too!
+      if (current_term != ""){
+        terms.push_back(current_term); // need to push back the last one, too!
+      }
       // build the expression tree now
       Node* root = nullptr; // root of expression tree, just declare it for now so it can be used in evaluating
       // infix will be infinitely more complicated; for prefix and postfix, the operations essentially become their own functions, so i don't need to keep order of operations or parentheses in mind
@@ -209,6 +231,7 @@ int main(){
       prevptr = nullptr;
       // output queue reset
       queue_back = nullptr;
+      queue_front = nullptr;
       // this loop makes me regret barely using whitespace (for C++, if anything i overuse it in python), i'll make these giant functions more legible in the future
       // also, keep in mind that i roughly copied this from the shunting yard algorithm wikipedia page, which was in pseudocode, i only half understand this
       while (terms.size() > 0){ // while not empty
@@ -219,7 +242,7 @@ int main(){
           enqueue(new_node); // push this to output queue
         } else if (is_operator(term)){ // check for regular operator
           while (headptr != nullptr){ // stack isn't empty
-            string top_term = headptr->get_data(); // top of stack, must be an operator
+            string top_term = headptr->data; // top of stack, must be an operator
             if (top_term == "("){ // this is a different... factor? i don't know what the part inside the parentheses is called in normal expressions honestly
               break; // i remember not being allowed to break, but that was sem. 1, and it looks like it's on the table now, like strings
             }
@@ -239,22 +262,55 @@ int main(){
           push(new_node);
         } else if (term == ")"){ // right parentheses
           // look for matching parentheses OR empty stack
-          while ((headptr != nullptr) && (headptr->get_data() != "(")){ // apparently && will always not run the second check if the first one fails. so i can actually use this by checking for nullptr first, then doing the function second, the other order crashes
+          while ((headptr != nullptr) && (headptr->data != "(")){ // apparently && will always not run the second check if the first one fails. so i can actually use this by checking for nullptr first, then doing the function second, the other order crashes
             Node* top_node = pop(); // remove this from stack
             enqueue(top_node); // and add to queue
           } // this should look for the left end
-          if ((headptr != nullptr) && (headptr->get_data() == "(")){ // left end was found
+          if ((headptr != nullptr) && (headptr->data == "(")){ // left end was found
             Node* top_node = pop(); // this left parentheses is garbage data now
             delete top_node; // don't want to be wasteful here!
           }
         }
       }
+      // now, add remaining terms to the queue
+      while (headptr != nullptr){
+        Node* top_node = pop();
+        enqueue(top_node);
+      }
+      // print the postfix before building rtee
+      Node* to_print = queue_front;
+      cout << reset1 << "Postfix (before finishing tree):";
+      while (to_print != nullptr){
+        cout << ' ' << to_print->data;
+        to_print = to_print->get_child(0);
+      }
+      cout << endl;
+      // build the expression tree from the queue
+      startptr = nullptr;
+      headptr = nullptr;
+      prevptr = nullptr;
+      // the stack will now be used to organize these elements, but it should be empty by the end
+      Node* current_node = dequeue();
+      while (current_node != nullptr){ // while the queue has remaining terms
+        if (is_operator(current_node->data)){ // if this is an operator
+          Node* child1 = pop();
+          Node* child2 = pop();
+          if (child1 == nullptr || child2 == nullptr){
+            cout << red << "Not enough operands for operator " << current_node->data << endl1 << flush;
+            return 0;
+          }
+          current_node->set_child(1, child2);
+          current_node->set_child(2, child1);
+          push(current_node);
+        } else { // number
+          push(current_node);
+        }
+        current_node = dequeue(); // remove the first element from the queue
+      }
+      root = pop(); // final expression should be root one
+      print_tree(root);
     }
-
   }
-
-
-  
     cout << yellow << "Goodbye!" << endl1 << flush;
   return 0;
 }

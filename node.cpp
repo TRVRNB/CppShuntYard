@@ -17,46 +17,12 @@ Node::~Node(){
   delete children[2];
 }
 
-Node* Node::get_child(unsigned short child_index){
-  // get the child requested in argument
-  return children[child_index]; // 0 or 1 or 2
+void Node::set_child(int child, Node* new_node){
+  children[child] = new_node;
 }
 
-string Node::get_child_data(unsigned short child_index){
-  // skip a step and go straight to this child's data!
-  if (children[child_index] == nullptr){
-    return "";
-  }
-  return children[child_index]->get_data();
+Node* Node::get_child(int child){
+  return children[child];
 }
 
-bool Node::have_grandkids(){
-  // whether or not any children have children
-  for (Node* child : children){
-    // look at all 3 children, check all 3 of their children
-    // if they have any children at all, return true
-    if (child != nullptr){
-      for (int i = 0; i < 3; i++){
-	if (child->get_child(i) != nullptr){
-	  return true;
-	}
-      }
-    }
-  }
-  return false;
-}
 
-void Node::set_child(unsigned short child_index, Node* n_child){
-  // set this child based on arguments
-  children[child_index] = n_child;
-}
-
-string Node::get_data(){
-  // get data from this node
-  return data;
-}
-
-void Node::set_data(string n_data){
-  // set data based on arguments
-  data = n_data;
-}
