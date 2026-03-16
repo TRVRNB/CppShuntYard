@@ -17,7 +17,7 @@ namespace shunting_yard{
   Node* queue_back = nullptr;
   // OTHER VARIABLES
   string mode = "prefix"; // this makes the most sense as a default mode to me
-  string version = "1.7";
+  string version = "1.8";
 }
 using namespace shunting_yard;
 
@@ -66,11 +66,12 @@ Node* pop(){
   // i could technically avoid this O(n) computation by storing the previous pointer in the Node class
   // but after a certain point, may as well bite the bullet and take a negligible hit to performance, it already has 3 pointers and a lot of functions
   // just know i would do this differently if i thought the stack would ever get to at least a few thousand elements
-  prevptr = startptr;
-  while (!prevptr->have_grandkids()){ // look for second to last
-    prevptr = prevptr->get_child(0); // get next
-    // get_child runs 3 times per loop here, but it shouldn't be a big hit
+  prevptr = nullptr; // had to change this since it fails when there is 1 node
+  Node* current_node = startptr;
+  while ((current_node != nullptr) && (current_node->get_child(0) != headptr)){
+    current_node = current_node->get_child(0); // get next
   }
+  prevptr = current_node;
   return headptr;
 }
 
@@ -134,6 +135,19 @@ bool is_operator(string term){
   return ((term == "+") || (term == "-") || (term == "*") || (term == "/") || (term == "^"));
 }
   
+int o3(string term){
+  // o3: order of operations, the name is confusing but less confusing than ooo()
+  // basically just returns higher values for preferred operations
+  if (term == "^"){
+    return 3;
+  } else if ((term == "/") || (term == "*")){
+    return 2;
+  } else {
+    return 1;
+  }
+
+}
+
 int main(){
   cout << red << "TRVRNB's Shunting Yard Calculator - Version " << version << endl1;
   cout << yellow << "Type 'HELP' for a list of commands." << endl1;
@@ -173,7 +187,7 @@ int main(){
       }
       // now, parse the expression
       // (just test it for now)
-      vector<string> terms;
+      vector<string> terms; // this would honestly be better as a queue. but i can only make so many
       string current_term = "";
       for (char c : expression){ // look at every char
         if (c == ' '){ // reset this term
@@ -185,37 +199,56 @@ int main(){
       }
       terms.push_back(current_term); // need to push back the last one, too!
       // build the expression tree now
-      Node* root = nullptr; // root of expression tree
+      Node* root = nullptr; // root of expression tree, just declare it for now so it can be used in evaluating
       // infix will be infinitely more complicated; for prefix and postfix, the operations essentially become their own functions, so i don't need to keep order of operations or parentheses in mind
       // but for infix, it's awkward, since you have to make the program infer the order instead
-      // if i input "+ * 2 3 4, that just wraps to the infix equivalent of 2 * 3 + 2, which is less human readable but more computer readable
-      if (mode == "prefix"){ // operators go before numbers
-        for (int i = terms.size(); i > 0; i--){ // iterate over terms in reverse
-          string term = terms[i-1];
+      // i misunderstood earlier, the only input mode is actually infix, so i need to make order of operations
+      // operator stack reset
+      startptr = nullptr;
+      headptr = nullptr;
+      prevptr = nullptr;
+      // output queue reset
+      queue_back = nullptr;
+      // this loop makes me regret barely using whitespace (for C++, if anything i overuse it in python), i'll make these giant functions more legible in the future
+      // also, keep in mind that i roughly copied this from the shunting yard algorithm wikipedia page, which was in pseudocode, i only half understand this
+      while (terms.size() > 0){ // while not empty
+        string term = terms.front();
+        terms.erase(terms.begin()); // pop front, this is basically a vector used as a queue
+        if (!is_operator(term) && term != "(" && term != ")"){ // would be easier if there was an 'isNumber' functino
           Node* new_node = new Node(term);
-          if (is_operator(term)){ // the operators go at the start but are iterated over at the end
-            // get two terms from stack, add them as children
-            Node* child1 = pop();
-            Node* child2 = pop();
-            new_node->set_child(1, child1); // children[1] is left child
-            new_node->set_child(2, child2);
+          enqueue(new_node); // push this to output queue
+        } else if (is_operator(term)){ // check for regular operator
+          while (headptr != nullptr){ // stack isn't empty
+            string top_term = headptr->get_data(); // top of stack, must be an operator
+            if (top_term == "("){ // this is a different... factor? i don't know what the part inside the parentheses is called in normal expressions honestly
+              break; // i remember not being allowed to break, but that was sem. 1, and it looks like it's on the table now, like strings
+            }
+            if ((o3(term) < o3(top_term)) || ((o3(term) == o3(top_term)) && (term != "^"))){ // top of stack has right order of operations
+              Node* top_node = pop(); // remove from stack
+              enqueue(top_node); // but add to queue
+              // the queue will be used to build the main expression tree anyway
+              // the numbers go first because it's postfix
+            } else {
+              break; // some stacks aren't meant to be emptied
+            }
           }
+          Node* new_node = new Node(term);
           push(new_node);
-        root = pop(); // end of expression tree will be root
-
-
-
+        } else if (term == "("){ // opening parentheses, for now just do the same thing as numbers
+          Node* new_node = new Node(term);
+          push(new_node);
+        } else if (term == ")"){ // right parentheses
+          // look for matching parentheses OR empty stack
+          while ((headptr != nullptr) && (headptr->get_data() != "(")){ // apparently && will always not run the second check if the first one fails. so i can actually use this by checking for nullptr first, then doing the function second, the other order crashes
+            Node* top_node = pop(); // remove this from stack
+            enqueue(top_node); // and add to queue
+          } // this should look for the left end
+          if ((headptr != nullptr) && (headptr->get_data() == "(")){ // left end was found
+            Node* top_node = pop(); // this left parentheses is garbage data now
+            delete top_node; // don't want to be wasteful here!
+          }
         }
-      } else if (mode == "postfix"){
-        return 0;
-
-
-      } else if (mode == "infix"){
-        return 0;
-
       }
-
-      
     }
 
   }
